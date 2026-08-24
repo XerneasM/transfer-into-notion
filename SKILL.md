@@ -1,6 +1,6 @@
 ---
 name: transfer-into-notion
-description: Analyze accessible URLs, local files, text, transcripts, images, audio, and video into conclusion-led multimodal learning notes in the user's chosen Notion knowledge database. Use for stateful transfer of articles, social posts or threads, webpages, PDFs, videos, podcasts, image-rich sources, and mixed-media links with evidence-aware structure, source-specific anchors, a newly designed knowledge map, executable review, and adaptive follow-up. Do not use for a plain summary that should not be written to Notion or for moving and restructuring existing Notion pages.
+description: Analyze accessible URLs, local files, text, transcripts, images, audio, and video into conclusion-led multimodal learning notes in the user's chosen Notion knowledge database. Adapt evidence collection to the user's available and authorized permissions, from public or supplied material through signed-in browser access to full local media processing. Use for stateful transfer of articles, social posts or threads, webpages, PDFs, videos, podcasts, image-rich sources, and mixed-media links with evidence-aware structure, source-specific anchors, a newly designed knowledge map, executable review, and adaptive follow-up. Do not use for a plain summary that should not be written to Notion or for moving and restructuring existing Notion pages.
 metadata:
   short-description: Transfer multimodal sources into structured Notion notes
 ---
@@ -21,13 +21,23 @@ Default to **efficient standard mode** unless the user requests another mode:
 
 Resolve every `scripts/...` and `references/...` path relative to the directory containing this `SKILL.md`, regardless of the current working directory.
 
+## Permission-adaptive execution
+
+Treat permissions as available capabilities, not as unlimited authorization. Read [references/permission-routing.md](references/permission-routing.md) before collecting source evidence. Select the lowest permission tier that can produce trustworthy evidence, then escalate only when the next tier is both available and already authorized for the task.
+
+- **Tier 1 — Public or supplied evidence:** public pages/files, official transcripts or captions, connected-source text, and user-provided text, files, screenshots, audio, or video.
+- **Tier 2 — Approved signed-in browser:** the user's existing Chrome or in-app browser session for visible authenticated content, official captions, normal downloads, and representative screenshots.
+- **Tier 3 — Approved full local processing:** shell and filesystem access for media already legitimately exposed to the user, existing local transcription/OCR tools, workspace-scoped temporary artifacts, and frame extraction.
+
+If a higher tier is unavailable, continue with a lower tier whenever the remaining evidence supports the central claims. If it does not, request the smallest missing artifact or permission. Never describe an unavailable tier as a source failure. Full access does not authorize reading/exporting browser cookies, credentials, unrelated files, or hidden secrets; bypassing DRM, paywalls, or access controls; installing software without separate authorization; or expanding the task beyond the supplied source and destination.
+
 ## Required workflow
 
 1. Run `python scripts/state_manager.py show` before querying Notion. When healthy state exists, use its data-source ID, semantic property map, next sequence, known authors, and compact style history; do not fetch prior note bodies or scan the full database. If no state exists, read [references/setup.md](references/setup.md) and perform its one-time bootstrap before drafting the note.
 2. Query only the canonical current source URL to detect duplicates. Re-fetch the Notion data-source schema only when state is absent, older than 30 days, the user reports a schema change, or a write fails validation. Prefer Notion connectors/MCP; do not use Computer Use unless a connector cannot complete a necessary operation.
-3. Classify the source as article/webpage, social post or thread, PDF/document, video, audio/podcast, image or gallery, mixed-media page, local file/bundle, or pasted material. Read [references/source-routing.md](references/source-routing.md) and follow only the relevant routes.
+3. Classify the source as article/webpage, social post or thread, PDF/document, video, audio/podcast, image or gallery, mixed-media page, local file/bundle, or pasted material. Read [references/permission-routing.md](references/permission-routing.md) and [references/source-routing.md](references/source-routing.md), then combine the selected permission tier with only the relevant source route.
 4. Establish a source-of-truth set from the accessible primary content and user-provided material. A title, thumbnail, social preview, search snippet, or generated summary alone is never enough. Inventory the modalities actually available and keep their roles distinct.
-5. If access is blocked by DRM, permissions, expiry, login state, robots rules, or extraction limits, try available non-screen-blocking methods first. Continue from user-provided text, transcript, file, subtitles, screenshots, or images when they provide sufficient evidence; otherwise stop before drafting and request the missing material. Never fill gaps from metadata or pretend that only one platform is supported.
+5. Apply the permission escalation ladder before declaring the source inaccessible. Start with public or supplied evidence; use an approved signed-in browser when authenticated content is necessary; use approved local processing when media is legitimately available and transcript/OCR/frame extraction adds needed evidence. Reconcile the resulting evidence lanes and record the route used. If the remaining material is still insufficient, stop before drafting and request the smallest missing artifact. Never fill gaps from metadata, treat missing public subtitles as a terminal failure when another approved route exists, or pretend that only one platform is supported.
 6. Separate three evidence lanes where relevant: **source author's claim**, **external verification**, and **Codex synthesis**. Treat comments, reposts, quoted posts, replies, linked pages, and embedded media as separate sources unless the primary author explicitly incorporates them. Do not invent timestamps, quotations, page numbers, section anchors, metadata, comments, or tool behavior.
 7. Extract the thesis, problem, method, decision logic, examples, failure paths, boundaries, and executable practice. Prefer synthesis over retelling or transcript-like compression.
 8. Build the note using [references/notion-note-spec.md](references/notion-note-spec.md). Read that reference before drafting or writing every note. Choose the source structure that fits: time-based timeline, article argument chain, document page map, gallery sequence, or multimodal evidence index.
@@ -53,6 +63,7 @@ Resolve every `scripts/...` and `references/...` path relative to the directory 
 
 - Prefer a fresh Codex task for each source so unrelated conversation history is not retained.
 - Reuse already fetched source metadata and extracted content within the task.
+- Reuse the selected permission tier until it fails; do not repeatedly probe unavailable connectors, browsers, or local tools.
 - Analyze long text, transcripts, documents, and media in meaningful batches. Sample frames around transitions instead of treating every frame as input.
 - Use user-provided source files and visuals before generating redundant captures.
 - Follow only linked sources that are necessary to understand, verify, or act on the central claim; do not recursively summarize the open web.
@@ -60,6 +71,7 @@ Resolve every `scripts/...` and `references/...` path relative to the directory 
 - Reuse known canonical official URLs, but open current pages for ambiguous identity, availability, version-sensitive claims, data freshness, cost, permissions, or safety. Use comments and community reports only when they change a practical decision.
 - Do not generate a knowledge map until the written synthesis is stable.
 - Prefer one complete Notion write followed by one lightweight property query over many edits or a full page fetch.
+- Keep temporary downloads, extracted frames, transcripts, and optional tool runtimes inside an explicit task/workspace temporary directory. Remove only artifacts created by the current run after the verified Notion write, unless the user asks to retain them.
 
 ## Reliability boundaries
 
@@ -67,6 +79,7 @@ Resolve every `scripts/...` and `references/...` path relative to the directory 
 - If sequence number is omitted, use local state or infer the next available zero-padded number from the selected data source; never overwrite a conflicting entry.
 - Mark uncertain facts as `待确认` or omit them. State when timestamps, section boundaries, page references, authorship, or dates are approximate.
 - Treat version-sensitive guidance, datasets, availability, costs, and tool behavior as time-bounded and record the evaluation date when verified.
+- State which permission/evidence route was used when it materially affects completeness: public/supplied, signed-in browser, or full local processing. Distinguish an official transcript from a local transcription and label transcription uncertainty.
 - Respect access controls and copyright. Synthesize; do not reproduce an article, transcript, book chapter, paywalled page, or image collection at length. Use only short quotations and the minimum source visuals needed for evidence.
 - Writing to Notion is allowed only when the user's request asks to create, transfer, record, or update the note. A request to review or draft alone is read-only.
 - Preserve unrelated Notion content and hierarchy. A transfer request authorizes adding one verified primary-author option only when the mapped author property is already `select` or `multi_select`; read [references/notion-note-spec.md](references/notion-note-spec.md) for the guarded procedure. Deletion, moving/reparenting pages, every other database schema change, installation, deployment, account changes, or paid purchases require separate explicit authorization.

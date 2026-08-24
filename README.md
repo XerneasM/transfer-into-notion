@@ -1,12 +1,14 @@
 # transfer-into-notion
 
-A Codex skill that turns accessible articles, social posts and threads, webpages, PDFs, documents, videos, podcasts, images, local files, and mixed-media links into conclusion-led learning notes in a user-selected Notion database.
+A Codex skill that turns accessible articles, social posts and threads, webpages, PDFs, documents, videos, podcasts, images, local files, and mixed-media links into conclusion-led learning notes in a user-selected Notion database. Evidence collection adapts to the permissions the user has actually provided instead of assuming every source must be publicly extractable.
 
 It preserves evidence provenance, chooses a source-appropriate structure, creates a fresh knowledge-map visual style for each standard/deep note, adds executable review, avoids duplicate source URLs, and synchronizes the current Codex task title to the finalized Notion title.
 
 ## Highlights
 
 - Routes articles, threads, PDFs, videos, audio, images, and mixed-media pages through source-specific evidence rules.
+- Selects among public/supplied evidence, an approved signed-in browser, and approved full local processing; it automatically falls back when a higher tier is unavailable.
+- Can finish videos without public subtitles when the user has supplied media or authorized browser/local processing, while labeling local transcription uncertainty.
 - Uses timelines for temporal media, argument chains for articles, page maps for documents, visual sequences for galleries, and evidence indexes for mixed sources.
 - Uses clickable source anchors only when stable and verified.
 - Writes into an existing Notion database selected during first-run setup without moving or reparenting existing pages.
@@ -56,6 +58,7 @@ Override it with TRANSFER_INTO_NOTION_STATE_DIR. Existing users can continue fro
     SKILL.md                         Skill entry point
     agents/openai.yaml               Codex UI metadata
     references/setup.md              First-run Notion mapping
+    references/permission-routing.md Permission tiers, escalation, and local-processing boundaries
     references/source-routing.md     Multimodal source and evidence routing
     references/notion-note-spec.md   Note structure, title sync, and QA
     references/extension-resources.md Conditional enrichment rules
@@ -64,6 +67,9 @@ Override it with TRANSFER_INTO_NOTION_STATE_DIR. Existing users can continue fro
 
 ## Privacy and permissions
 
+- Permission tiers are capabilities, not blanket authority. The skill uses the lowest tier that can support the note and records the route when it affects completeness.
+- Full local access does not authorize reading/exporting cookies, credentials, unrelated files, or hidden secrets, and it never permits DRM/paywall bypass.
+- Missing local transcription/OCR dependencies are installed only with separate authorization unless the user already granted it explicitly.
 - Review third-party sources under their access and copyright rules.
 - Notion writes occur only when the user asks to create, transfer, record, or update a note.
 - The skill creates or updates a record inside the selected database; it does not move the database or unrelated pages.

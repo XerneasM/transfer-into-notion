@@ -1,6 +1,6 @@
 interface:
   display_name: "Transfer into Notion"
-  short_description: "将文章、贴文、文档、视频、音频、图片与混合链接整理成结构化 Notion 笔记"
-  default_prompt: "Use $transfer-into-notion to analyze this source, transfer an evidence-aware multimodal learning note into my chosen Notion database, and sync the current Codex task title to the finalized Notion title."
+  short_description: "按可用权限整理文章、视频、文档等来源并写入 Notion"
+  default_prompt: "Use $transfer-into-notion to analyze this source with the lowest sufficient authorized permission tier, transfer an evidence-aware multimodal learning note into my chosen Notion database, and sync the current Codex task title to the finalized Notion title."
 policy:
   allow_implicit_invocation: true

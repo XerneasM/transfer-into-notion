@@ -1,6 +1,6 @@
 # Source routing and multimodal evidence
 
-Read this file after classifying the input. Follow only the relevant routes. The goal is sufficient primary evidence, not exhaustive extraction.
+Read this file after classifying the input and selecting a permission tier from [permission-routing.md](permission-routing.md). Follow only the relevant source route. The goal is sufficient primary evidence, not exhaustive extraction.
 
 ## Shared intake
 
@@ -53,11 +53,13 @@ Read this file after classifying the input. Follow only the relevant routes. The
 
 ### Video
 
-- Prefer supplied or platform transcripts/subtitles, then audio transcription, while checking important claims against the video.
+- Prefer supplied or platform transcripts/subtitles. When they are unavailable, follow the permission ladder: approved signed-in captions/player evidence, then authorized local audio transcription of media legitimately available to the user.
+- Missing public subtitles is not by itself a blocker. It becomes a blocker only when no approved browser, supplied-media, or local-processing route can establish sufficient primary evidence.
 - Sample frames around topic or scene transitions. Do not treat every frame as evidence.
 - Use verified native timestamp links. Canonical Bilibili URLs use t=<whole-seconds>; YouTube uses t=<whole-seconds>s. Preserve existing query parameters.
 - When exact deep linking is unavailable, link the timestamp to the source and label the jump as non-exact.
 - Do not infer on-screen text, code, or diagrams from transcript alone.
+- Label locally generated transcripts and recheck consequential names, commands, numbers, and quotations against audio or frames.
 
 ### Audio or podcast
 
@@ -83,14 +85,15 @@ Read this file after classifying the input. Follow only the relevant routes. The
 
 ## Access and fallback
 
-Try the least intrusive trustworthy path:
+Combine this source route with the permission ladder in [permission-routing.md](permission-routing.md). Prefer:
 
 1. Direct source content or downloadable file.
 2. Official transcript, captions, reader view, print/PDF view, or accessible mirror that preserves provenance.
 3. Approved signed-in browser session.
-4. User-provided text, transcript, file, screenshots, or images.
+4. User-provided text, transcript, file, screenshots, audio, or video.
+5. Approved local extraction/transcription/OCR of content legitimately available to the user.
 
-Stop before drafting when the remaining material cannot support the central claims. Ask for the smallest missing artifact. Never bypass access controls, DRM, paywalls, or permissions.
+Stop before drafting when the remaining material cannot support the central claims. Ask for the smallest missing artifact or authorization. Never read/export hidden credentials or bypass access controls, DRM, paywalls, or permissions.
 
 ## Multimodal reconciliation
 
