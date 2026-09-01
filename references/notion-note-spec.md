@@ -132,6 +132,8 @@ Rules:
 
 Before choosing a style, read the compact local style history rather than prior note bodies. Invent a new reference style whose design family, layout, palette, typography, and information organization are materially different from previous entries. Do not use prebuilt style templates or merely recolor a previous layout. Record the style name and a short fingerprint after the Notion write succeeds.
 
+Read [knowledge-map-design.md](knowledge-map-design.md) before generating the visual. The declared style must be recognizable from the rendered image without relying on its caption. Pass schema/text validation, style-materialization audit, full-size visual review, and thumbnail review. Reject pastel rectangles joined by arrows, equal-weight card grids, or ornamental framing around an otherwise generic flowchart. Validation without visual review is incomplete.
+
 The visual must:
 
 - encode the source's central process, comparison, argument, decision structure, or multimodal relationship rather than merely decorate the page;

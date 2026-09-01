@@ -21,6 +21,7 @@ from typing import Any
 
 SCHEMA_VERSION = 1
 PROPERTY_ROLES = {"title", "author", "platform", "source_url", "content_type", "timeliness"}
+VISUALIZATION_MODES = {"local_svg", "hybrid", "ask_each_time"}
 
 
 def now_iso() -> str:
@@ -118,6 +119,8 @@ def validate_state(state: dict[str, Any], profile_key: str | None = None) -> lis
     visual = state.get("visualization")
     if not isinstance(visual, dict) or not isinstance(visual.get("used_styles"), list):
         errors.append("visualization.used_styles must be a list")
+    elif visual.get("mode") is not None and visual.get("mode") not in VISUALIZATION_MODES:
+        errors.append("visualization.mode must be local_svg, hybrid, ask_each_time, or null")
     return errors
 
 
@@ -172,7 +175,7 @@ def new_state(args: argparse.Namespace) -> dict[str, Any]:
             "property_map": dict(args.property or []),
         },
         "next_sequence": args.next_sequence,
-        "visualization": {"used_styles": styles},
+        "visualization": {"used_styles": styles, "mode": None},
         "recent_notes": [last_note] if last_note else [],
         "last_note": last_note,
         "created_at": now_iso(),
@@ -195,6 +198,7 @@ def compact_state(state: dict[str, Any]) -> dict[str, Any]:
             "property_map": notion.get("property_map", {}),
         },
         "used_styles": state["visualization"].get("used_styles", []),
+        "visualization_mode": state["visualization"].get("mode"),
         "last_note": state.get("last_note"),
         "state_path": str(state_path(state["profile_key"])),
     }
@@ -297,6 +301,19 @@ def cmd_touch_schema(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_set_visualization_mode(args: argparse.Namespace) -> int:
+    key = resolve_profile_key(args.profile_key)
+    if not key:
+        raise SystemExit("No active profile. Run init first.")
+    state = load_state(key)
+    state["visualization"]["mode"] = args.mode
+    state["updated_at"] = now_iso()
+    atomic_write(state_path(key), state, backup_path(key))
+    set_active(key)
+    print(json.dumps(compact_state(state), ensure_ascii=False, indent=2))
+    return 0
+
+
 def cmd_check(args: argparse.Namespace) -> int:
     key = resolve_profile_key(args.profile_key)
     if not key:
@@ -370,6 +387,11 @@ def build_parser() -> argparse.ArgumentParser:
     touch.add_argument("--property", action="append", type=parse_property, default=[])
     touch.add_argument("--checked-at")
     touch.set_defaults(func=cmd_touch_schema)
+
+    visual_mode = sub.add_parser("set-visualization-mode", help="Persist the preferred knowledge-map generation mode")
+    visual_mode.add_argument("--profile-key")
+    visual_mode.add_argument("mode", choices=sorted(VISUALIZATION_MODES))
+    visual_mode.set_defaults(func=cmd_set_visualization_mode)
 
     check = sub.add_parser("check", help="Validate active or selected state")
     check.add_argument("--profile-key")

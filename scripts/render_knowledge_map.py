@@ -81,6 +81,23 @@ def validate_spec(spec: dict[str, Any]) -> tuple[list[str], list[str]]:
             if not str(style.get(key, "")).strip():
                 errors.append(f"style.{key} is required")
 
+    if int(spec.get("schema_version", 1)) >= 2:
+        direction = spec.get("art_direction")
+        if not isinstance(direction, dict):
+            errors.append("art_direction must be an object for schema_version 2")
+        else:
+            for key in ("metaphor", "composition", "relationship"):
+                if not str(direction.get(key, "")).strip():
+                    errors.append(f"art_direction.{key} is required")
+            for key in ("motifs", "forbidden"):
+                value = direction.get(key)
+                if not isinstance(value, list) or not value:
+                    errors.append(f"art_direction.{key} must be a non-empty list")
+            for key in ("palette_roles", "typography_roles"):
+                value = direction.get(key)
+                if not isinstance(value, dict) or not value:
+                    errors.append(f"art_direction.{key} must be a non-empty object")
+
     blocks = spec.get("blocks", [])
     if not isinstance(blocks, list):
         errors.append("blocks must be a list")
@@ -141,15 +158,22 @@ def render_shape(shape: dict[str, Any]) -> str:
         "stroke": shape.get("stroke", "none"),
         "stroke-width": shape.get("stroke_width", 0),
         "opacity": shape.get("opacity", 1),
+        "filter": shape.get("filter"),
+        "clip-path": shape.get("clip_path"),
+        "mask": shape.get("mask"),
     }
     if kind == "rect":
         return f'<rect {attrs({**common, "x": shape.get("x", 0), "y": shape.get("y", 0), "width": shape.get("w", 0), "height": shape.get("h", 0), "rx": shape.get("radius", 0), "transform": shape.get("transform")})}/>'
     if kind == "circle":
         return f'<circle {attrs({**common, "cx": shape.get("cx", 0), "cy": shape.get("cy", 0), "r": shape.get("r", 0)})}/>'
+    if kind == "ellipse":
+        return f'<ellipse {attrs({**common, "cx": shape.get("cx", 0), "cy": shape.get("cy", 0), "rx": shape.get("rx", 0), "ry": shape.get("ry", 0), "transform": shape.get("transform")})}/>'
     if kind == "line":
         return f'<line {attrs({**common, "x1": shape.get("x1", 0), "y1": shape.get("y1", 0), "x2": shape.get("x2", 0), "y2": shape.get("y2", 0), "stroke-linecap": shape.get("linecap", "round")})}/>'
+    if kind in {"polygon", "polyline"}:
+        return f'<{kind} {attrs({**common, "points": shape.get("points", ""), "transform": shape.get("transform"), "stroke-linecap": shape.get("linecap", "round"), "stroke-linejoin": shape.get("linejoin", "round")})}/>'
     if kind == "path":
-        return f'<path {attrs({**common, "d": shape.get("d", ""), "stroke-linecap": shape.get("linecap", "round"), "stroke-linejoin": shape.get("linejoin", "round")})}/>'
+        return f'<path {attrs({**common, "d": shape.get("d", ""), "transform": shape.get("transform"), "stroke-dasharray": shape.get("dash"), "stroke-linecap": shape.get("linecap", "round"), "stroke-linejoin": shape.get("linejoin", "round"), "filter": shape.get("filter"), "clip-path": shape.get("clip_path"), "mask": shape.get("mask")})}/>'
     raise ValueError(f"Unsupported shape type: {kind}")
 
 
@@ -185,6 +209,54 @@ def render_decoration(item: dict[str, Any]) -> str:
     return render_shape(item)
 
 
+def render_defs(spec: dict[str, Any]) -> str:
+    defs = spec.get("defs", {})
+    parts = [
+        '<marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="context-stroke"/></marker>'
+    ]
+    for gradient in defs.get("gradients", []):
+        kind = gradient.get("type", "linear")
+        tag = "radialGradient" if kind == "radial" else "linearGradient"
+        values = {"id": gradient.get("id")}
+        if tag == "linearGradient":
+            values.update({key: gradient.get(key) for key in ("x1", "y1", "x2", "y2")})
+        else:
+            values.update({key: gradient.get(key) for key in ("cx", "cy", "r", "fx", "fy")})
+        stops = []
+        for stop in gradient.get("stops", []):
+            stops.append(f'<stop {attrs({"offset": stop.get("offset"), "stop-color": stop.get("color"), "stop-opacity": stop.get("opacity")})}/>')
+        parts.append(f'<{tag} {attrs(values)}>{"".join(stops)}</{tag}>')
+    for pattern in defs.get("patterns", []):
+        body = []
+        if pattern.get("background"):
+            body.append(f'<rect width="100%" height="100%" fill="{esc(pattern["background"])}"/>')
+        for shape in pattern.get("shapes", []):
+            body.append(render_shape(shape))
+        parts.append(f'<pattern {attrs({"id": pattern.get("id"), "width": pattern.get("width"), "height": pattern.get("height"), "patternUnits": "userSpaceOnUse", "patternTransform": pattern.get("transform")})}>{"".join(body)}</pattern>')
+    for item in defs.get("filters", []):
+        if item.get("type") == "drop_shadow":
+            parts.append(f'<filter {attrs({"id": item.get("id"), "x": item.get("x", "-30%"), "y": item.get("y", "-30%"), "width": item.get("width", "160%"), "height": item.get("height", "160%")})}><feDropShadow {attrs({"dx": item.get("dx", 8), "dy": item.get("dy", 8), "stdDeviation": item.get("blur", 6), "flood-color": item.get("color", "#000"), "flood-opacity": item.get("opacity", 0.25)})}/></filter>')
+    for clip in defs.get("clip_paths", []):
+        parts.append(f'<clipPath id="{esc(clip.get("id"))}">{"".join(render_shape(shape) for shape in clip.get("shapes", []))}</clipPath>')
+    return "<defs>" + "".join(parts) + "</defs>"
+
+
+def render_connector(connector: dict[str, Any]) -> str:
+    common = {
+        "fill": connector.get("fill", "none"),
+        "stroke": connector.get("color", "#111"),
+        "stroke-width": connector.get("stroke_width", 4),
+        "stroke-dasharray": connector.get("dash"),
+        "stroke-linecap": connector.get("linecap", "round"),
+        "stroke-linejoin": connector.get("linejoin", "round"),
+        "marker-end": "url(#arrow)" if connector.get("arrow", True) else None,
+        "opacity": connector.get("opacity", 1),
+    }
+    if connector.get("d"):
+        return f'<path {attrs({**common, "d": connector.get("d")})}/>'
+    return f'<line {attrs({**common, "x1": connector.get("x1"), "y1": connector.get("y1"), "x2": connector.get("x2"), "y2": connector.get("y2")})}/>'
+
+
 def render_svg(spec: dict[str, Any]) -> str:
     canvas = spec["canvas"]
     width = int(canvas["width"])
@@ -192,7 +264,7 @@ def render_svg(spec: dict[str, Any]) -> str:
     family = spec.get("typography", {}).get("font_family", DEFAULT_FONT)
     out = [
         f'<svg xmlns="http://www.w3.org/2000/svg" width="{width}" height="{height}" viewBox="0 0 {width} {height}">',
-        '<defs><marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="context-stroke"/></marker></defs>',
+        render_defs(spec),
         f'<rect width="{width}" height="{height}" fill="{esc(canvas["background"])}"/>',
     ]
     for item in spec.get("decorations", []):
@@ -200,13 +272,23 @@ def render_svg(spec: dict[str, Any]) -> str:
     for shape in spec.get("shapes", []):
         out.append(render_shape(shape))
     for connector in spec.get("connectors", []):
-        out.append(f'<line {attrs({"x1": connector.get("x1"), "y1": connector.get("y1"), "x2": connector.get("x2"), "y2": connector.get("y2"), "stroke": connector.get("color", "#111"), "stroke-width": connector.get("stroke_width", 4), "stroke-dasharray": connector.get("dash"), "marker-end": "url(#arrow)" if connector.get("arrow", True) else None})}/>')
+        out.append(render_connector(connector))
     for block in spec.get("blocks", []):
         x, y, w, h = (float(block[k]) for k in ("x", "y", "w", "h"))
         shadow = block.get("shadow")
         if isinstance(shadow, dict):
             out.append(f'<rect {attrs({"x": x + float(shadow.get("dx", 8)), "y": y + float(shadow.get("dy", 8)), "width": w, "height": h, "rx": block.get("radius", 0), "fill": shadow.get("color", "#111"), "opacity": shadow.get("opacity", 1)})}/>')
-        out.append(f'<rect {attrs({"x": x, "y": y, "width": w, "height": h, "rx": block.get("radius", 0), "fill": block.get("fill", "#fff"), "stroke": block.get("stroke", "#111"), "stroke-width": block.get("stroke_width", 3)})}/>')
+        block_shape = block.get("shape", "rect")
+        backdrop = {"type": block_shape, "fill": block.get("fill", "#fff"), "stroke": block.get("stroke", "#111"), "stroke_width": block.get("stroke_width", 3), "filter": block.get("filter")}
+        if block_shape == "ellipse":
+            backdrop.update({"cx": x + w / 2, "cy": y + h / 2, "rx": w / 2, "ry": h / 2})
+        elif block_shape == "polygon":
+            backdrop["points"] = block.get("points", f"{x+w/2},{y} {x+w},{y+h/2} {x+w/2},{y+h} {x},{y+h/2}")
+        elif block_shape == "path":
+            backdrop["d"] = block.get("d", "")
+        else:
+            backdrop.update({"x": x, "y": y, "w": w, "h": h, "radius": block.get("radius", 0)})
+        out.append(render_shape(backdrop))
         padding = float(block.get("padding", 28))
         title_size = float(block.get("title_size", 30))
         body_size = float(block.get("body_size", 21))
@@ -234,7 +316,7 @@ def render_svg(spec: dict[str, Any]) -> str:
         width_limit = float(text.get("w", spec["canvas"]["width"]))
         lines = wrap_text(str(text.get("text", "")), width_limit, size)
         max_lines = int(text.get("max_lines", len(lines) or 1))
-        out.append(render_text(float(text.get("x", 0)), float(text.get("y", 0)), lines[:max_lines], size, text.get("color", "#111"), text.get("weight", 600), float(text.get("leading", 1.25)), anchor=text.get("anchor", "start"), family=family, italic=bool(text.get("italic", False))))
+        out.append(render_text(float(text.get("x", 0)), float(text.get("y", 0)), lines[:max_lines], size, text.get("color", "#111"), text.get("weight", 600), float(text.get("leading", 1.25)), anchor=text.get("anchor", "start"), family=text.get("font_family", family), italic=bool(text.get("italic", False))))
     out.append("</svg>")
     return "\n".join(out) + "\n"
 
@@ -246,22 +328,84 @@ def load_spec(path: str) -> dict[str, Any]:
     return value
 
 
+def audit_spec(spec: dict[str, Any]) -> list[str]:
+    """Report observable style-materialization and generic-flowchart risks."""
+    warnings: list[str] = []
+    if int(spec.get("schema_version", 1)) < 2:
+        warnings.append("schema_version 1 has no enforceable art-direction contract")
+        return warnings
+
+    direction = spec.get("art_direction", {})
+    collections = [spec.get(name, []) for name in ("decorations", "shapes", "connectors", "blocks", "texts")]
+    objects = [item for collection in collections for item in collection if isinstance(item, dict)]
+    actual_motifs = {str(item.get("motif")) for item in objects if item.get("motif")}
+    actual_palette = {str(item.get("palette_role")) for item in objects if item.get("palette_role")}
+    actual_type = {str(item.get("role")) for item in spec.get("texts", []) if isinstance(item, dict) and item.get("role")}
+
+    for motif in direction.get("motifs", []):
+        if str(motif) not in actual_motifs:
+            warnings.append(f"declared motif is not materialized: {motif}")
+    for role in direction.get("palette_roles", {}):
+        if str(role) not in actual_palette:
+            warnings.append(f"declared palette role is not materialized: {role}")
+    for role in direction.get("typography_roles", {}):
+        if str(role) not in actual_type:
+            warnings.append(f"declared typography role is not materialized: {role}")
+
+    blocks = [item for item in spec.get("blocks", []) if isinstance(item, dict)]
+    shapes = [item for item in spec.get("shapes", []) if isinstance(item, dict)]
+    non_rect = sum(1 for item in shapes if item.get("type", "rect") not in {"rect", "line"})
+    simple_rects = len(blocks) + sum(1 for item in shapes if item.get("type", "rect") == "rect")
+    structural = max(1, simple_rects + non_rect)
+    if len(blocks) >= 5 and simple_rects / structural > 0.55:
+        warnings.append("generic-flowchart risk: rectangular cards dominate the composition")
+    if len(blocks) >= 4 and non_rect < 3:
+        warnings.append("generic-flowchart risk: insufficient non-rectangular structure")
+
+    connectors = [item for item in spec.get("connectors", []) if isinstance(item, dict)]
+    if len(connectors) >= 3 and not any(item.get("d") for item in connectors):
+        warnings.append("generic-flowchart risk: every connector is a straight line")
+
+    sizes = {float(item.get("font_size", 24)) for item in spec.get("texts", []) if isinstance(item, dict)}
+    sizes.update(float(item.get("title_size", 30)) for item in blocks)
+    sizes.update(float(item.get("body_size", 21)) for item in blocks)
+    if len(sizes) < 3:
+        warnings.append("typography has fewer than three observable hierarchy levels")
+
+    text_units = sum(units(str(item.get("text", ""))) for item in spec.get("texts", []) if isinstance(item, dict))
+    for block in blocks:
+        text_units += units(str(block.get("title", "")))
+        body = block.get("body", [])
+        if isinstance(body, str):
+            body = [body]
+        text_units += sum(units(str(item)) for item in body)
+    if text_units > 520:
+        warnings.append(f"text density is too high for a single knowledge map: {text_units:.0f} units")
+
+    if len(direction.get("motifs", [])) < 2:
+        warnings.append("art direction needs at least two materialized motifs")
+    return warnings
+
+
 def schema_summary() -> dict[str, Any]:
     return {
-        "purpose": "Fresh style brief + arbitrary geometry; no style presets",
+        "purpose": "Portable style-materialized SVG; no fixed visual template",
         "required": {
+            "schema_version": 2,
             "canvas": {"width": 1600, "height": 1000, "background": "opaque color"},
             "style": {"name": "real style name", "family": "distinct family", "layout": "layout signature", "palette": "palette signature", "traits": "one-sentence traits"},
-            "blocks": [{"x": 60, "y": 180, "w": 440, "h": 260, "title": "...", "body": ["..."], "fill": "#FFFFFF", "stroke": "#111111"}],
+            "art_direction": {"metaphor": "...", "composition": "...", "relationship": "...", "motifs": ["motif-a", "motif-b"], "forbidden": ["generic cards"], "palette_roles": {"ground": "#...", "signal": "#..."}, "typography_roles": {"display": "...", "label": "...", "caption": "..."}},
         },
         "optional": {
             "typography": {"font_family": DEFAULT_FONT},
-            "texts": ["absolute text objects"],
-            "shapes": ["rect, circle, line, or path objects"],
-            "connectors": ["x1, y1, x2, y2, color, arrow"],
-            "decorations": ["grid, dots, rect, circle, line, or path"],
+            "defs": ["gradients, patterns, filters, clip_paths"],
+            "texts": ["absolute text objects with role and palette_role"],
+            "shapes": ["rect, circle, ellipse, line, polygon, polyline, or path objects with motif and palette_role"],
+            "connectors": ["line coordinates or curved path d; motif and palette_role"],
+            "blocks": ["optional bounded text objects; avoid card dominance"],
+            "decorations": ["grid, dots, or arbitrary shapes"],
         },
-        "rule": "Choose all style and geometry values per note; validate until warnings are resolved.",
+        "rule": "Pass validate and audit, then visually review the rendered preview. A generic office-flowchart result is a blocking failure.",
     }
 
 
@@ -271,6 +415,8 @@ def build_parser() -> argparse.ArgumentParser:
     sub.add_parser("schema", help="Print compact declarative schema")
     validate = sub.add_parser("validate", help="Validate a JSON spec without rendering")
     validate.add_argument("spec")
+    audit = sub.add_parser("audit", help="Audit style materialization and generic-flowchart risks")
+    audit.add_argument("spec")
     render = sub.add_parser("render", help="Validate and render a JSON spec")
     render.add_argument("spec")
     render.add_argument("output")
@@ -289,6 +435,11 @@ def main() -> int:
     if args.command == "validate":
         print(json.dumps(result, ensure_ascii=False, indent=2))
         return 0 if not errors and not warnings else 1
+    if args.command == "audit":
+        audit_warnings = audit_spec(spec)
+        result = {"ok": not errors and not warnings and not audit_warnings, "errors": errors, "warnings": warnings + audit_warnings}
+        print(json.dumps(result, ensure_ascii=False, indent=2))
+        return 0 if result["ok"] else 1
     if errors or (warnings and not args.allow_warnings):
         print(json.dumps(result, ensure_ascii=False, indent=2))
         return 1

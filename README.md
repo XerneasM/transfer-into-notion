@@ -15,7 +15,7 @@ It preserves evidence provenance, chooses a source-appropriate structure, create
 - Stores private IDs, sequence history, author names, and style fingerprints outside the repository.
 - Avoids duplicate notes by checking the canonical source URL.
 - Adds external resources or next actions only when the source justifies them.
-- Uses a style-neutral SVG renderer; it does not ship prebuilt knowledge-map styles.
+- Uses a local-first SVG v2 renderer with enforceable art direction, curved paths, gradients, patterns, filters, and a deterministic anti-flowchart audit; it does not ship prebuilt knowledge-map styles.
 - Renames the calling Codex task to the exact finalized Notion title after verification.
 
 ## Requirements
@@ -39,7 +39,7 @@ Invoke the skill with a URL, local file, or supplied source material:
 
     Use $transfer-into-notion to analyze this source, transfer the note into my Notion knowledge database, and sync this Codex task title: <URL or file>
 
-On first use, the skill asks you to select an existing Notion database, maps its semantic properties, and creates compact private state. During later transfers it may append one verified source author to an existing mapped author select or multi-select while preserving all current options; every other schema change, database restructuring, or page move still requires explicit authorization.
+On first use, the skill asks you to select an existing Notion database, maps its semantic properties, and creates compact private state. The first time a knowledge map is needed, it also asks whether future maps should default to local SVG, hybrid image generation, or asking each time; the choice is saved privately and can be changed later. During later transfers it may append one verified source author to an existing mapped author select or multi-select while preserving all current options; every other schema change, database restructuring, or page move still requires explicit authorization.
 
 Private state defaults to:
 
@@ -60,10 +60,12 @@ Override it with TRANSFER_INTO_NOTION_STATE_DIR. Existing users can continue fro
     references/setup.md              First-run Notion mapping
     references/permission-routing.md Permission tiers, escalation, and local-processing boundaries
     references/source-routing.md     Multimodal source and evidence routing
+    references/knowledge-map-design.md Local/hybrid modes and visual QA gate
     references/notion-note-spec.md   Note structure, title sync, and QA
     references/extension-resources.md Conditional enrichment rules
     scripts/state_manager.py         Private cross-platform state
-    scripts/render_knowledge_map.py  Style-neutral SVG renderer
+    scripts/render_knowledge_map.py  Local SVG v2 renderer and aesthetic audit
+    scripts/test_knowledge_map.py    Portable knowledge-map smoke tests
 
 ## Privacy and permissions
 
