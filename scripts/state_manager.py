@@ -245,6 +245,8 @@ def cmd_commit(args: argparse.Namespace) -> int:
         raise SystemExit(f"Expected sequence {state['next_sequence']:03d}, got {args.sequence:03d}")
 
     styles = state["visualization"]["used_styles"]
+    if args.is_update:
+        styles[:] = [item for item in styles if int(item.get("sequence", 0)) != args.sequence]
     style_names = {str(item.get("name", "")).casefold() for item in styles}
     if args.style_name.casefold() in style_names and not (args.allow_style_reuse or args.is_update):
         raise SystemExit(f"Style already used: {args.style_name}")
