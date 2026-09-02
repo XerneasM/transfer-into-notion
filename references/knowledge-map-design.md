@@ -7,7 +7,7 @@ Read this reference before creating a knowledge map in efficient-standard or dee
 Read `visualization_mode` from `state_manager.py show`.
 
 - Missing or null: treat it as `hybrid`. New profiles are initialized this way.
-- `hybrid` (default): use the user's currently available built-in image-generation or aesthetic-enhancement tool to create a text-free visual base, then overlay exact labels locally. This consumes the user's current tool allowance; never switch to a paid API, install a provider, or request a new purchase without explicit authorization.
+- `hybrid` (default): compose the complete information structure as deterministic local SVG, then use the user's currently available built-in image-generation or aesthetic-enhancement tool for one bounded, text-free style accent. The AI layer is an enhancement, not the canvas. This consumes the user's current tool allowance; never switch to a paid API, install a provider, or request a new purchase without explicit authorization.
 - `local_svg`: use the portable local SVG pipeline. Persist this downgrade only when the user explicitly asks to save allowance, says the AI-image cost is too high, or directly requests local-only output.
 - `ask_each_time`: ask before this map and do not silently change the saved preference.
 
@@ -20,10 +20,22 @@ Write a compact visual brief before geometry:
 1. What relationship must the image make easier to understand?
 2. What single visual metaphor belongs to the source?
 3. What real design family will govern composition, type, line, color, and ornament?
-4. Which two or more motifs visibly prove that family was used?
+4. Which one or two motifs visibly prove that family was used?
 5. Which generic treatments would betray the concept?
 
 The style name is not evidence of style fidelity. A declared style is valid only when its motifs, composition, typography roles, and palette roles are materialized by actual scene objects.
+
+## Visual complexity budget
+
+Calibrate ordinary knowledge maps to a clean editorial infographic, not a poster or cinematic scene:
+
+- one title zone, one focal relationship, three to six primary modules, and at most one boundary/footer callout;
+- one dominant style motif plus, when useful, one quieter supporting motif;
+- two to four palette roles and three typographic levels;
+- generous empty space around every major group;
+- AI-generated imagery normally occupies no more than roughly 10–15% of the canvas.
+
+Do not equate stronger style with more decoration. Full-canvas AI backgrounds, dense ornamental borders, multiple competing textures, glowing poster effects, and scene-filling illustration are blocking failures for an ordinary knowledge map. Use them only when the source itself requires a primarily illustrative scene and the user has asked for that direction.
 
 ## Density and hierarchy
 
@@ -63,7 +75,9 @@ The renderer's audit is a warning system, not proof of beauty. Visual review is 
 
 Use hybrid mode by default when an image-generation tool is already available.
 
-- Ask the image model for a text-free illustration, material field, or atmospheric base.
+- Build layout, grouping, hierarchy, connectors, whitespace, and every exact label locally first.
+- Ask the image model for one text-free identifying accent such as a small icon, emblem, object, or restrained texture crop. Default to placing it in a header or focal zone and keep it within the visual complexity budget.
+- Do not generate a full-canvas background or poster scene for an ordinary knowledge map.
 - Do not ask it to render Chinese labels, logos, precise metrics, quotations, or logical arrows.
 - Keep the knowledge structure, exact labels, connectors, and provenance in local SVG.
 - Apply the same validate, audit, thumbnail, and visual-review gates.
@@ -80,8 +94,9 @@ Score each dimension from 1–5 and revise any dimension below 4:
 - **Thematic specificity:** the image belongs to this source, not any workflow.
 - **Thumbnail readability:** the main relationship survives at reduced size.
 - **Craft:** curves, alignments, spacing, and ornament feel intentional.
+- **Restraint:** decoration never competes with the title, structure, or labels.
 
-Generic office-flowchart appearance is a blocking failure regardless of the average score.
+Generic office-flowchart appearance and decorative overload are both blocking failures regardless of the average score.
 
 ## Style-history rule
 

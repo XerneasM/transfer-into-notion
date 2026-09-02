@@ -15,7 +15,7 @@ It preserves evidence provenance, chooses a source-appropriate structure, create
 - Stores private IDs, sequence history, author names, and style fingerprints outside the repository.
 - Avoids duplicate notes by checking the canonical source URL.
 - Adds external resources or next actions only when the source justifies them.
-- Defaults to AI-enhanced knowledge maps using the user's currently available built-in image allowance, then overlays exact labels locally; the SVG v2 renderer remains the allowance-saving fallback with an enforceable anti-flowchart audit.
+- Defaults to structure-first AI-enhanced knowledge maps: exact hierarchy and labels are composed locally, while the user's available built-in image allowance supplies one restrained style accent; full-canvas generated backgrounds are rejected for ordinary maps. The SVG v2 renderer remains the allowance-saving fallback.
 - Renames the calling Codex task to the exact finalized Notion title after verification.
 
 ## Requirements
@@ -39,7 +39,7 @@ Invoke the skill with a URL, local file, or supplied source material:
 
     Use $transfer-into-notion to analyze this source, transfer the note into my Notion knowledge database, and sync this Codex task title: <URL or file>
 
-On first use, the skill asks you to select an existing Notion database, maps its semantic properties, and creates compact private state. Knowledge maps default to AI aesthetic enhancement using the user's current built-in tool allowance. If the user later says that allowance consumption is too high or requests local-only output, the skill saves `local_svg` for subsequent maps; it never silently changes modes or adds a paid provider. During later transfers it may append one verified source author to an existing mapped author select or multi-select while preserving all current options; every other schema change, database restructuring, or page move still requires explicit authorization.
+On first use, the skill asks you to select an existing Notion database, maps its semantic properties, and creates compact private state. Knowledge maps default to structure-first AI aesthetic enhancement using the user's current built-in tool allowance: deterministic SVG carries the information while AI contributes a small identifying motif. If the user later says that allowance consumption is too high or requests local-only output, the skill saves `local_svg` for subsequent maps; it never silently changes modes or adds a paid provider. During later transfers it may append one verified source author to an existing mapped author select or multi-select while preserving all current options; every other schema change, database restructuring, or page move still requires explicit authorization.
 
 Private state defaults to:
 
