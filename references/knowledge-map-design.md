@@ -7,7 +7,7 @@ Read this reference before creating a knowledge map in efficient-standard or dee
 Read `visualization_mode` from `state_manager.py show`.
 
 - Missing or null: treat it as `hybrid`. New profiles are initialized this way.
-- `hybrid` (default): compose the complete information structure as deterministic local SVG, then use the user's currently available built-in image-generation or aesthetic-enhancement tool for one bounded, text-free style accent. The AI layer is an enhancement, not the canvas. This consumes the user's current tool allowance; never switch to a paid API, install a provider, or request a new purchase without explicit authorization.
+- `hybrid` (default): use the user's currently available built-in image-generation or aesthetic-enhancement tool as the primary renderer for one integrated knowledge map. Ask it to design the information structure, hierarchy, composition, typography, connectors, visual metaphor, and complete aesthetic as one system. Local editing may repair exact labels after generation, but must not replace the AI-designed structure by default. This consumes the user's current tool allowance; never switch to a paid API, install a provider, or request a new purchase without explicit authorization.
 - `local_svg`: use the portable local SVG pipeline. Persist this downgrade only when the user explicitly asks to save allowance, says the AI-image cost is too high, or directly requests local-only output.
 - `ask_each_time`: ask before this map and do not silently change the saved preference.
 
@@ -25,17 +25,16 @@ Write a compact visual brief before geometry:
 
 The style name is not evidence of style fidelity. A declared style is valid only when its motifs, composition, typography roles, and palette roles are materialized by actual scene objects.
 
-## Visual complexity budget
+## Readability and aesthetic balance
 
-Calibrate ordinary knowledge maps to a clean editorial infographic, not a poster or cinematic scene:
+Calibrate ordinary knowledge maps to a polished editorial infographic whose visual language and information architecture feel inseparable:
 
 - one title zone, one focal relationship, three to six primary modules, and at most one boundary/footer callout;
-- one dominant style motif plus, when useful, one quieter supporting motif;
-- two to four palette roles and three typographic levels;
+- a clear dominant visual idea, controlled supporting detail, and at least three typographic levels;
 - generous empty space around every major group;
-- AI-generated imagery normally occupies no more than roughly 10–15% of the canvas.
+- readable labels and relationships at Notion page width.
 
-Do not equate stronger style with more decoration. Full-canvas AI backgrounds, dense ornamental borders, multiple competing textures, glowing poster effects, and scene-filling illustration are blocking failures for an ordinary knowledge map. Use them only when the source itself requires a primarily illustrative scene and the user has asked for that direction.
+Do not impose a fixed limit on how much of the canvas AI may generate. Full-canvas composition, illustration, texture, or atmosphere is allowed when it supports the hierarchy. Reject only when decoration, effects, or scene detail compete with the content, when labels become hard to scan, or when the relationship is less clear than a simpler treatment.
 
 ## Density and hierarchy
 
@@ -75,12 +74,11 @@ The renderer's audit is a warning system, not proof of beauty. Visual review is 
 
 Use hybrid mode by default when an image-generation tool is already available.
 
-- Build layout, grouping, hierarchy, connectors, whitespace, and every exact label locally first.
-- Ask the image model for one text-free identifying accent such as a small icon, emblem, object, or restrained texture crop. Default to placing it in a header or focal zone and keep it within the visual complexity budget.
-- Do not generate a full-canvas background or poster scene for an ordinary knowledge map.
-- Do not ask it to render Chinese labels, logos, precise metrics, quotations, or logical arrows.
-- Keep the knowledge structure, exact labels, connectors, and provenance in local SVG.
-- Apply the same validate, audit, thumbnail, and visual-review gates.
+- Freeze an exact-content brief first: thesis, required modules, relationships, mandatory labels, and prohibited additions.
+- Ask the image model to generate the complete knowledge map as one integrated design. It may determine the layout, grouping, connectors, typography, motifs, and full-canvas treatment as long as the exact-content brief remains intact.
+- Inspect the generated result at full and thumbnail size. Regenerate when the structure, hierarchy, or readability fails; do not silently substitute a locally designed structure.
+- Prefer another AI edit or regeneration when Chinese labels, metrics, or relationships are wrong. A local overlay may make surgical text corrections only after the integrated composition is accepted and only when the correction does not redesign the information structure.
+- Keep provenance outside the image when dense provenance would reduce readability.
 - If the user says allowance consumption is too high, finish the current safe step, persist `local_svg`, and use local advanced SVG for subsequent maps. Do not infer this preference from ordinary quality feedback.
 
 ## Visual review rubric
@@ -100,4 +98,13 @@ Generic office-flowchart appearance and decorative overload are both blocking fa
 
 ## Style-history rule
 
-Use compact style history to avoid repeating a prior composition, but do not optimize for novel names. A new style must be materially different in its visible grammar. When updating an existing note, preserve its accepted style name while improving materialization.
+Use compact style history to prevent adjacent notes from looking like the same visual family. Do not ban retro or historical styles globally: they may recur after an intervening non-retro style. The hard rule is that two clearly retro/historical styles must not appear consecutively.
+
+Before generation, create three to five source-appropriate candidates with `name`, `family`, `era`, `layout`, `palette`, `motif`, and `content_fit`. Compare them with the immediately preceding style:
+
+- reject a retro/historical candidate when the immediately preceding style is also retro/historical;
+- reject a candidate whose family is the same, or whose layout plus palette/motif are substantially similar, to the immediately preceding style;
+- do not reject a retro candidate merely because an older non-adjacent note used a retro style;
+- among the remaining highest-fit candidates, select stably and pseudo-randomly from the canonical source URL plus sequence number so identical inputs produce the same choice.
+
+Use `scripts/select_knowledge_map_style.py` for this selection. When updating an existing note, preserve an accepted style only if the user asks to keep it; otherwise rerun candidate selection when the purpose is to correct adjacent similarity.

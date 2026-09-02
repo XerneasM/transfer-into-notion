@@ -125,20 +125,24 @@ def validate_state(state: dict[str, Any], profile_key: str | None = None) -> lis
 
 
 def parse_style(raw: str) -> dict[str, Any]:
-    parts = raw.split("|", 4)
-    if len(parts) != 5:
-        raise argparse.ArgumentTypeError("style must be SEQUENCE|NAME|FAMILY|LAYOUT|PALETTE")
+    parts = raw.split("|")
+    if len(parts) not in {5, 7}:
+        raise argparse.ArgumentTypeError("style must be SEQUENCE|NAME|FAMILY|LAYOUT|PALETTE[|ERA|MOTIF]")
     try:
         sequence = int(parts[0])
     except ValueError as exc:
         raise argparse.ArgumentTypeError("style sequence must be an integer") from exc
-    return {
+    style = {
         "sequence": sequence,
         "name": parts[1].strip(),
         "family": parts[2].strip(),
         "layout": parts[3].strip(),
         "palette": parts[4].strip(),
     }
+    if len(parts) == 7:
+        style["era"] = parts[5].strip()
+        style["motif"] = parts[6].strip()
+    return style
 
 
 def parse_property(raw: str) -> tuple[str, str]:
@@ -251,6 +255,8 @@ def cmd_commit(args: argparse.Namespace) -> int:
             "family": args.style_family,
             "layout": args.style_layout,
             "palette": args.style_palette,
+            "era": args.style_era,
+            "motif": args.style_motif,
         })
         styles.sort(key=lambda item: int(item.get("sequence", 0)))
 
@@ -375,6 +381,8 @@ def build_parser() -> argparse.ArgumentParser:
     commit.add_argument("--style-family", required=True)
     commit.add_argument("--style-layout", required=True)
     commit.add_argument("--style-palette", required=True)
+    commit.add_argument("--style-era", default="")
+    commit.add_argument("--style-motif", default="")
     commit.add_argument("--is-update", action="store_true")
     commit.add_argument("--allow-style-reuse", action="store_true")
     commit.set_defaults(func=cmd_commit)
