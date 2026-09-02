@@ -6,12 +6,12 @@ Read this reference before creating a knowledge map in efficient-standard or dee
 
 Read `visualization_mode` from `state_manager.py show`.
 
-- Missing or null: ask the user once which default to use, then persist it with `state_manager.py set-visualization-mode MODE`.
-- `local_svg`: use the portable local SVG pipeline.
-- `hybrid`: when an image-generation tool is available, create a text-free visual base and overlay exact vector labels locally. If unavailable, disclose the fallback and use local SVG; do not install or purchase anything.
+- Missing or null: treat it as `hybrid`. New profiles are initialized this way.
+- `hybrid` (default): use the user's currently available built-in image-generation or aesthetic-enhancement tool to create a text-free visual base, then overlay exact labels locally. This consumes the user's current tool allowance; never switch to a paid API, install a provider, or request a new purchase without explicit authorization.
+- `local_svg`: use the portable local SVG pipeline. Persist this downgrade only when the user explicitly asks to save allowance, says the AI-image cost is too high, or directly requests local-only output.
 - `ask_each_time`: ask before this map and do not silently change the saved preference.
 
-Offer three user-facing choices: 本地高级 SVG, 混合增强（SVG + 图片生成）, or 每次询问. Explain that local SVG is portable and text-accurate; hybrid can add illustrative texture but remains optional.
+Do not ask a first-use mode question. Start with the AI-enhanced default. If the built-in tool is unavailable or exhausted, disclose that the default cannot run and ask before changing the saved mode; do not silently downgrade. Users may still select 本地高级 SVG, AI 审美增强, or 每次询问 at any time.
 
 ## Start with art direction, not boxes
 
@@ -61,12 +61,13 @@ The renderer's audit is a warning system, not proof of beauty. Visual review is 
 
 ## Hybrid workflow
 
-Use hybrid mode only when selected and an image-generation tool is already available.
+Use hybrid mode by default when an image-generation tool is already available.
 
 - Ask the image model for a text-free illustration, material field, or atmospheric base.
 - Do not ask it to render Chinese labels, logos, precise metrics, quotations, or logical arrows.
 - Keep the knowledge structure, exact labels, connectors, and provenance in local SVG.
 - Apply the same validate, audit, thumbnail, and visual-review gates.
+- If the user says allowance consumption is too high, finish the current safe step, persist `local_svg`, and use local advanced SVG for subsequent maps. Do not infer this preference from ordinary quality feedback.
 
 ## Visual review rubric
 

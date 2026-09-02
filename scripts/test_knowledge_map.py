@@ -81,11 +81,13 @@ def main() -> int:
             str(STATE), "init", "--profile-key", "test", "--data-source-id", "ds", "--next-sequence", "1",
             env=env,
         )
-        assert init["visualization_mode"] is None
+        assert init["visualization_mode"] == "hybrid"
         selected = run(str(STATE), "set-visualization-mode", "local_svg", env=env)
         assert selected["visualization_mode"] == "local_svg"
         shown = run(str(STATE), "show", env=env)
         assert shown["visualization_mode"] == "local_svg"
+        restored = run(str(STATE), "set-visualization-mode", "hybrid", env=env)
+        assert restored["visualization_mode"] == "hybrid"
 
     print(json.dumps({"ok": True, "tests": ["v2_validate", "v2_audit", "generic_rejection", "visualization_mode"]}))
     return 0

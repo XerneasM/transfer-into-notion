@@ -175,7 +175,7 @@ def new_state(args: argparse.Namespace) -> dict[str, Any]:
             "property_map": dict(args.property or []),
         },
         "next_sequence": args.next_sequence,
-        "visualization": {"used_styles": styles, "mode": None},
+        "visualization": {"used_styles": styles, "mode": "hybrid"},
         "recent_notes": [last_note] if last_note else [],
         "last_note": last_note,
         "created_at": now_iso(),
@@ -198,7 +198,7 @@ def compact_state(state: dict[str, Any]) -> dict[str, Any]:
             "property_map": notion.get("property_map", {}),
         },
         "used_styles": state["visualization"].get("used_styles", []),
-        "visualization_mode": state["visualization"].get("mode"),
+        "visualization_mode": state["visualization"].get("mode") or "hybrid",
         "last_note": state.get("last_note"),
         "state_path": str(state_path(state["profile_key"])),
     }
